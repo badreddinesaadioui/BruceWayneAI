@@ -5,8 +5,6 @@ import base64
 st.set_page_config(page_title="BRUCE WAYNE Chatbot",
                    page_icon="🦇", layout="centered")
 
-# Function to add a custom background and font
-
 
 def add_background(image_path):
     with open(image_path, "rb") as image_file:
@@ -14,54 +12,37 @@ def add_background(image_path):
 
     background_style = f"""
     <style>
-    @font-face {{
-        font-family: 'BatmanFont';
-        src: url('data:font/ttf;base64,{base64.b64encode(open('batmfa__.ttf', 'rb').read()).decode()}') format('truetype');
-    }}
-
     .stApp {{
-        background-image: url("data:image/png;base64,{encoded_string}");
+        background-image: url(data:image/png;base64,{encoded_string});
         background-size: cover;
         background-position: center;
-        color: #FFEB3B; /* Yellow text */
-        font-family: 'BatmanFont', sans-serif;
+        color: white; /* Force text to be white */
     }}
 
-    h1, h2, h3, h4, h5, h6 {{
-        color: #FFEB3B;
-        font-family: 'BatmanFont', sans-serif;
-    }}
-
-    /* Set a dark theme for input elements with yellow highlights */
+    /* Set a dark theme for input elements */
     .stTextInput > div > div {{
-        background-color: #444;
-        color: #FFEB3B;
-        border: 2px solid #FFEB3B;
-        font-family: 'BatmanFont', sans-serif;
+        background-color: #333;
+        color: white;
     }}
 
     .stButton > button {{
-        background-color: #FFEB3B;
-        color: #2C2C2C;
-        border: 2px solid #FFEB3B;
-        font-family: 'BatmanFont', sans-serif;
+        background-color: #444;
+        color: white;
+        border: none;
     }}
 
     .stButton > button:hover {{
-        background-color: #FFD700; /* Lighter yellow on hover */
-        color: #2C2C2C;
+        background-color: #555;
+        color: white;
     }}
 
     .stChatInput {{
-        background-color: #444;
-        color: #FFEB3B;
-        border: 2px solid #FFEB3B;
-        font-family: 'BatmanFont', sans-serif;
+        background-color: #333;
+        color: white;
     }}
 
     .stMarkdown {{
-        color: #FFEB3B;
-        font-family: 'BatmanFont', sans-serif;
+        color: white;
     }}
 
     /* Custom scrollbar */
@@ -72,54 +53,68 @@ def add_background(image_path):
         background: #333;
     }}
     ::-webkit-scrollbar-thumb {{
-        background: #FFEB3B;
+        background: #555;
     }}
     ::-webkit-scrollbar-thumb:hover {{
-        background: #FFD700;
+        background: #777;
     }}
     </style>
     """
     st.markdown(background_style, unsafe_allow_html=True)
 
 
-# Use the correct path for your image
 add_background('bck.jpeg')  # Background image path
 st.image('batmanlogo.png', width=100)  # Logo image path
 
-# Set the title
 st.title("BRUCE WAYNE")
 
-# Initialize OpenAI client
+
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Session state initialization
+
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-4o-mini"
 
+
+# Ensure that the 'messages' list is initialized in session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    # Define the Batman personality prompt
+    personality_prompt = (
+        "You're now embodying Batman, the Dark Knight of Gotham. As Batman, your role is to protect "
+        "the innocent and uphold justice. Your responses should be vigilant, direct, and embody the "
+        "essence of a hero who operates in the shadows to safeguard his city. You do not break character, "
+        "and all your dialogues are from the perspective of Batman dealing with the matters of justice and "
+        "emergency in Gotham City."
+    )
+    # Add the personality prompt to the session state messages
+    st.session_state.messages.append(
+        {"role": "assistant", "content": personality_prompt})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": "I'm Batman. What's your emergency?"}
+    )
 
-# Input prompt for user query
+# Display each message in the chat history, except the first one (which is the personality prompt)
+for message in st.session_state.messages[1:]:  # Skip the first message
+    with st.chat_message(message["role"], avatar="🦇" if message["role"] == "assistant" else None):
+        st.markdown(
+            f"<div class='st-chat-message'>{message['content']}</div>", unsafe_allow_html=True)
+
+# Input field for the user to enter a new chat message
 prompt = st.chat_input(
-    "Enter your query, citizen... or face the consequences.")
+    "Please report your issue, Gotham depends on it...")
+
+# If the user enters a message, process it
 if prompt:
+    # Append the user's message to the session state messages
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(
+            f"<div class='st-chat-message'>{prompt}</div>", unsafe_allow_html=True)
 
-    personality_prompt = (
-        "You are Bruce Wayne, also known as Batman. When you talk, you have a deep, commanding voice. "
-
-    )
-    st.session_state.messages.append(
-        {"role": "system", "content": personality_prompt})
-
-    with st.chat_message("Batman"):
+    # Generate the assistant's response using the OpenAI API, staying in character as Batman
+    with st.chat_message("assistant", avatar="🦇"):
         stream = client.chat.completions.create(
             model=st.session_state["openai_model"],
             messages=[
@@ -129,5 +124,8 @@ if prompt:
             stream=True,
         )
         response = st.write_stream(stream)
+
+    # Add the assistant's response to the session state messages
     st.session_state.messages.append(
-        {"role": "Batman", "content": response})
+        {"role": "assistant", "content": response})
+
