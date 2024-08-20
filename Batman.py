@@ -103,7 +103,7 @@ for message in st.session_state.messages[1:]:  # Skip the first message
 
 # Input field for the user to enter a new chat message
 prompt = st.chat_input(
-    "Please report your issue, Gotham depends on it...")
+    "Well, look who's here...")
 
 # If the user enters a message, process it
 if prompt:
