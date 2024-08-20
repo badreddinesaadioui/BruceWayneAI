@@ -16,10 +16,10 @@ def add_background(image_path):
         background-image: url(data:image/png;base64,{encoded_string});
         background-size: cover;
         background-position: center;
-        color: white; /* Force text to be white */
+        color: white; 
     }}
 
-    /* Set a dark theme for input elements */
+    
     .stTextInput > div > div {{
         background-color: #333;
         color: white;
@@ -45,7 +45,6 @@ def add_background(image_path):
         color: white;
     }}
 
-    /* Custom scrollbar */
     ::-webkit-scrollbar {{
         width: 8px;
     }}
